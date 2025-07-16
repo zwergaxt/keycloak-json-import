@@ -122,17 +122,19 @@
             }
         },
         {% endif %}
+        {% endfor %}
+        {% for i in describe_rules %}
         {
-            "name": "Describe:{{ cluster_name }}:{{ t.resource_name }}",
+            "name": "Describe:{{ cluster_name }}:{{ i.resource_name }}",
             "type": "scope",
             "logic": "POSITIVE",
             "decisionStrategy": "AFFIRMATIVE",
             "config": {
-                "resources": "[\"kafka-cluster:{{ cluster_name }},Topic:{{ t.resource_name }}\"]",
-                "applyPolicies": "[\"{{ t.ad_group_name|replace("-C-", "-P-") }}\", \"{{ t.ad_group_name|replace("-P-", "-C-") }}\"]",
+                "resources": "[\"kafka-cluster:{{ cluster_name }},Topic:{{ i.resource_name }}\"]",
+                "applyPolicies": "[{% for g in i.ad_group_name %} \"{{ g }}\" {% if g == i.ad_group_name|last %} {% else %},{% endif %} {% endfor %}]",
                 "scopes": "[\"Describe\"]"
             }
-        }{% if t == topics|last %} {% else %},{% endif %}
+        }{% if i == describe_rules|last %} {% else %},{% endif %}
         {% endfor %}
     ]
     
