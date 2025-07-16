@@ -53,6 +53,9 @@
                 },
                 {
                     "name": "AlterConfigs"
+                },
+                {
+                    "name": "Write"
                 }
             ]
         },
@@ -87,7 +90,7 @@
             "name": "{{ t.ad_group_name }}",
             "type": "group",
             "logic": "POSITIVE",
-            "decisionStrategy": "UNANIMOUS",
+            "decisionStrategy": "AFFIRMATIVE",
             "config": {
                 "groups": 
                     "[{\"path\":\"/{{ t.ad_group_name }}\",\"extendChildren\":false}]"
@@ -99,26 +102,37 @@
             "name": "Producer:{{ cluster_name }}:{{ t.resource_name }}:{{ t.ad_group_name }}",
             "type": "scope",
             "logic": "POSITIVE",
-            "decisionStrategy": "UNANIMOUS",
+            "decisionStrategy": "AFFIRMATIVE",
             "config": {
                 "resources": "[\"kafka-cluster:{{ cluster_name }},Topic:{{ t.resource_name }}\"]",
                 "applyPolicies": "[\"{{ t.ad_group_name }}\"]",
-                "scopes": "[\"Describe\",\"Write\"]"
+                "scopes": "[\"Write\"]"
             }
-        }{% if t == topics|last %} {% else %},{% endif %}
+        },
         {% else %}
         {
             "name": "Consumer:{{ cluster_name }}:{{ t.resource_name }}:{{ t.ad_group_name }}",
             "type": "scope",
             "logic": "POSITIVE",
-            "decisionStrategy": "UNANIMOUS",
+            "decisionStrategy": "AFFIRMATIVE",
             "config": {
                 "resources": "[\"kafka-cluster:{{ cluster_name }},Topic:{{ t.resource_name }}\"]",
                 "applyPolicies": "[\"{{ t.ad_group_name }}\"]",
-                "scopes": "[\"Describe\",\"Read\"]"
+                "scopes": "[\"Read\"]"
             }
-        }{% if t == topics|last %} {% else %},{% endif %} 
+        },
         {% endif %}
+        {
+            "name": "Describe:{{ cluster_name }}:{{ t.resource_name }}",
+            "type": "scope",
+            "logic": "POSITIVE",
+            "decisionStrategy": "AFFIRMATIVE",
+            "config": {
+                "resources": "[\"kafka-cluster:{{ cluster_name }},Topic:{{ t.resource_name }}\"]",
+                "applyPolicies": "[\"{{ t.ad_group_name|replace("-C-", "-P-") }}\", \"{{ t.ad_group_name|replace("-P-", "-C-") }}\"]",
+                "scopes": "[\"Describe\"]"
+            }
+        }{% if t == topics|last %} {% else %},{% endif %}
         {% endfor %}
     ]
     
