@@ -1,0 +1,126 @@
+{
+    "allowRemoteResourceManagement": true,
+    "policyEnforcementMode": "ENFORCING",
+    "resources": [
+        {
+            "name": "kafka-cluster:{{ cluster_name }},Cluster:*",
+            "type": "Cluster",
+            "ownerManagedAccess": false,
+            "displayName": "Cluster scopes on {{ cluster_name }}",
+            "attributes": {},
+            "uris": [],
+            "scopes": [
+                {
+                    "name": "DescribeConfigs"
+                },
+                {
+                    "name": "AlterConfigs"
+                },
+                {
+                    "name": "ClusterAction"
+                },
+                {
+                    "name": "IdempotentWrite"
+                }
+            ]
+        },
+        {% for t in topics %}
+        {
+            "name": "kafka-cluster:{{ cluster_name }},Topic:{{ t.resource_name }}",
+            "type": "Topic",
+            "ownerManagedAccess": false,
+            "displayName": "Topic:{{ cluster_name }}:{{ t.resource_name }}",
+            "attributes": {},
+            "uris": [],
+            "scopes": [
+                {
+                    "name": "Create"
+                },
+                {
+                    "name": "Read"
+                },
+                {
+                    "name": "Delete"
+                },
+                {
+                    "name": "Alter"
+                },
+                {
+                    "name": "Describe"
+                },
+                {
+                    "name": "DescribeConfigs"
+                },
+                {
+                    "name": "AlterConfigs"
+                }
+            ]
+        },
+        {
+            "name": "kafka-cluster:{{ cluster_name }},Group:{{ t.resource_name }}",
+            "type": "Group",
+            "ownerManagedAccess": false,
+            "displayName": "Group:{{ cluster_name }}:{{ t.resource_name }}",
+            "attributes": {},
+            "uris": [],
+            "scopes": [
+                {
+                    "name": "Describe"
+                },
+                {
+                    "name": "Read"
+                },
+                {
+                    "name": "DescribeConfigs"
+                },
+                {
+                    "name": "AlterConfigs"
+                }
+            ]
+        {# check if t is last item #}
+        }{% if t == topics|last %} {% else %},{% endif %} 
+        {% endfor %}
+    ],
+    "policies": [
+        {% for t in topics %}
+        {
+            "name": "{{ t.ad_group_name }}",
+            "type": "group",
+            "logic": "POSITIVE",
+            "decisionStrategy": "UNANIMOUS",
+            "config": {
+                "groups": 
+                    "[{\"path\":\"/{{ t.ad_group_name }}\",\"extendChildren\":false}]"
+
+            }
+        },
+        {% if t.role == "P" %}
+        {
+            "name": "Producer:{{ cluster_name }}:{{ t.resource_name }}:{{ t.ad_group_name }}",
+            "type": "scope",
+            "logic": "POSITIVE",
+            "decisionStrategy": "UNANIMOUS",
+            "config": {
+                "resources": "[\"kafka-cluster:{{ cluster_name }},Topic:{{ t.resource_name }}\"]",
+                "applyPolicies": "[\"{{ t.ad_group_name }}\"]",
+                "scopes": "[\"Describe\",\"Write\"]"
+            }
+        }{% if t == topics|last %} {% else %},{% endif %}
+        {% else %}
+        {
+            "name": "Consumer:{{ cluster_name }}:{{ t.resource_name }}:{{ t.ad_group_name }}",
+            "type": "scope",
+            "logic": "POSITIVE",
+            "decisionStrategy": "UNANIMOUS",
+            "config": {
+                "resources": "[\"kafka-cluster:{{ cluster_name }},Topic:{{ t.resource_name }}\"]",
+                "applyPolicies": "[\"{{ t.ad_group_name }}\"]",
+                "scopes": "[\"Describe\",\"Read\"]"
+            }
+        }{% if t == topics|last %} {% else %},{% endif %} 
+        {% endif %}
+        {% endfor %}
+    ]
+    
+
+}
