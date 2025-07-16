@@ -14,6 +14,15 @@
                     "name": "DescribeConfigs"
                 },
                 {
+                    "name": "Describe"
+                },
+                {
+                    "name": "Read"
+                },
+                {
+                    "name": "Alter"
+                },
+                {
                     "name": "AlterConfigs"
                 },
                 {
@@ -58,12 +67,14 @@
                     "name": "Write"
                 }
             ]
+        {# check if t is last item #}
         },
+        {% endfor %}
         {
-            "name": "kafka-cluster:{{ cluster_name }},Group:{{ t.resource_name }}",
+            "name": "kafka-cluster:{{ cluster_name }},Group:*",
             "type": "Group",
             "ownerManagedAccess": false,
-            "displayName": "Group:{{ cluster_name }}:{{ t.resource_name }}",
+            "displayName": "Group:{{ cluster_name }}:*",
             "attributes": {},
             "uris": [],
             "scopes": [
@@ -74,17 +85,40 @@
                     "name": "Read"
                 },
                 {
+                    "name": "Alter"
+                },
+                {
                     "name": "DescribeConfigs"
                 },
                 {
                     "name": "AlterConfigs"
                 }
             ]
-        {# check if t is last item #}
-        }{% if t == topics|last %} {% else %},{% endif %} 
-        {% endfor %}
+        }
     ],
     "policies": [
+        {
+            "name": "Cluster:{{ cluster_name }}",
+            "type": "scope",
+            "logic": "POSITIVE",
+            "decisionStrategy": "AFFIRMATIVE",
+            "config": {
+                "resources": "[\"kafka-cluster:{{ cluster_name }},Cluster:*\"]",
+                "applyPolicies": "[{% for t in topics %} \"{{ t.ad_group_name|upper }}\"{% if t == topics|last %}{% else %},{% endif %}{% endfor %}]",
+                "scopes": "[\"Describe\",\"Read\",\"Alter\",\"IdempotentWrite\",\"DescribeConfigs\",\"AlterConfigs\"]"
+            }
+        },
+        {
+            "name": "Group:{{ cluster_name }}",
+            "type": "scope",
+            "logic": "POSITIVE",
+            "decisionStrategy": "AFFIRMATIVE",
+            "config": {
+                "resources": "[\"kafka-cluster:{{ cluster_name }},Group:*\"]",
+                "applyPolicies": "[{% for t in topics %} \"{{ t.ad_group_name|upper }}\"{% if t == topics|last %}{% else %},{% endif %}{% endfor %}]",
+                "scopes": "[\"Describe\",\"Read\",\"Alter\",\"DescribeConfigs\",\"AlterConfigs\"]"
+            }
+        },
         {% for t in topics %}
         {
             "name": "{{ t.ad_group_name }}",
