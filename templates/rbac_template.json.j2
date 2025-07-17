@@ -33,7 +33,7 @@
                 }
             ]
         },
-        {% for t in topics %}
+        {% for t in data %}
         {
             "name": "kafka-cluster:{{ cluster_name }},Topic:{{ t.resource_name }}",
             "type": "Topic",
@@ -104,7 +104,7 @@
             "decisionStrategy": "AFFIRMATIVE",
             "config": {
                 "resources": "[\"kafka-cluster:{{ cluster_name }},Cluster:*\"]",
-                "applyPolicies": "[{% for t in topics %} \"{{ t.ad_group_name|upper }}\"{% if t == topics|last %}{% else %},{% endif %}{% endfor %}]",
+                "applyPolicies": "[{% for d in groups_data %} \"{{ d }}\"{% if d == groups_data|last %}{% else %},{% endif %}{% endfor %}]",
                 "scopes": "[\"Describe\",\"Read\",\"Alter\",\"IdempotentWrite\",\"DescribeConfigs\",\"AlterConfigs\"]"
             }
         },
@@ -115,11 +115,11 @@
             "decisionStrategy": "AFFIRMATIVE",
             "config": {
                 "resources": "[\"kafka-cluster:{{ cluster_name }},Group:*\"]",
-                "applyPolicies": "[{% for t in topics %} \"{{ t.ad_group_name|upper }}\"{% if t == topics|last %}{% else %},{% endif %}{% endfor %}]",
+                "applyPolicies": "[{% for d in groups_data %} \"{{ d }}\"{% if d == groups_data|last %}{% else %},{% endif %}{% endfor %}]",
                 "scopes": "[\"Describe\",\"Read\",\"Alter\",\"DescribeConfigs\",\"AlterConfigs\"]"
             }
         },
-        {% for t in topics %}
+        {% for t in data %}
         {
             "name": "{{ t.ad_group_name }}",
             "type": "group",
