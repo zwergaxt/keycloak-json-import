@@ -69,11 +69,12 @@ def render_json(data, cluster, describe_rules, groups_data):
     )
 
 
-data_path = "./data/rbac_data_example.csv"
+data_path = "./data/rbac_data_example_all_topic.csv"
 data = read_csv_to_named_dict(data_path)
+cluster = "bksblps-kafka3"
 # render jinja template
 result = render_json(
-    data=data, cluster="bksblps-kafka", describe_rules=get_describe_config(data), groups_data=get_groups(data)
+    data=data, cluster=cluster, describe_rules=get_describe_config(data), groups_data=get_groups(data)
 )
 
 # Write result to file
